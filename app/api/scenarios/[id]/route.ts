@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
 export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -15,7 +16,7 @@ export async function DELETE(
 
   const result = await prisma.scenario.deleteMany({
     where: {
-      id: params.id,
+      id,
       userId: session.user.id,
     },
   });
@@ -24,6 +25,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ id: params.id });
+  return NextResponse.json({ id });
 }
 
